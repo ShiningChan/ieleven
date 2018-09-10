@@ -3551,3 +3551,151 @@ sax:chardata:
 sax:end_element: ol
 '''
 
+
+
+
+
+## xml解析雅虎天气预报信息
+
+# 解析XML时，注意找出自己感兴趣的节点，
+# 响应事件时，把节点数据保存起来。
+# 解析完毕后，就可以处理数据。
+URL = 'https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20weather.forecast%20where%20woeid%20%3D%202151330&format=xml'
+
+# 读取url对应网页数据
+with request.urlopen(URL, timeout=4) as f:
+    data = f.read()     #bytes型记得decode
+
+# print(data)
+
+#定义全局变量
+weather_dict = {}
+which_day = 0
+
+
+#定义解析类
+class WeatherSaxHandler(object):
+
+    def start_element(self, name, attrs):   # attrs为属性，本质为字典
+        print(name, str(attrs))
+        global weather_dict, which_day
+        # 判断并获取XML文档中地理位置信息
+        # sax:start_element: yweather:location, attrs: {'xmlns:yweather': 'http://xml.weather.yahoo.com/ns/rss/1.0', 'city': 'Beijing', 'country': 'China', 'region': ' Beijing'}
+        # sax:end_element: yweather:location
+        if name == 'yweather:location':
+            weather_dict['city'] = attrs['city']
+            weather_dict['country'] = attrs['country']
+        # 获取天气预测信息
+        if name == 'yweather:forecast':
+            weather = {
+                        'text': attrs['text'],
+                        'date' : attrs['date'],
+                        'day': attrs['day'],
+                        'low': attrs['low'],
+                        'high': attrs['high']}
+            weather_dict[which_day] = weather
+            which_day += 1
+
+
+            
+    def end_element(self, name):
+        pass
+
+    def data_element(self, text):
+        pass
+
+        
+
+handler = WeatherSaxHandler()
+parser = ParserCreate()
+parser.StartElementHandler = handler.start_element
+parser.EndElementHandler = handler.end_element
+parser.CharacterDataHandler = handler.data_element
+
+
+parser.Parse(data.decode('utf-8'))
+
+
+print(which_day)
+
+print(weather_dict)
+
+assert weather_dict['city'] == 'Beijing'
+print(weather_dict[2])
+
+
+
+## HTML解析网页中的文本、图像 等……
+'''
+嵌套关系：<head><title></title></head> 父子
+
+并列关系：<head></head><body></body> 兄弟姐妹
+
+双标记 <标记名></标记名> :<front ></front >、<p > </p> 等
+
+单标记 <标记名/> ：注释、 <br/> 、<!Doctype html>、<hr/>
+'''
+
+class MyHTMLParser(HTMLParser):
+    
+    def handle_starttag(self, tag, attrs):
+        print('<%s>' % tag)
+
+    def handle_endtag(self, tag):
+        print('</%s>' % tag)
+
+    def handle_startendtag(self, tag, attrs):
+        print('<%s/>' % tag)    
+        
+    def handle_data(self, data):
+        print(data)
+        
+    def handle_comment(self, data):
+        print('<!--', data, '-->')
+    
+    # 特殊字符 英文表示的&nbsp;
+    def handle_entityref(self, name):
+        print('&%s;' % name)
+        
+    #特殊字符 数字表示的&#1234;
+    def handle_charref(self, name):
+        print('&#%s;' % name)
+        
+
+parser = MyHTMLParser()
+parser.feed('''<html>
+<head></head>
+<body>
+<!-- test html parser -->
+    <p>Some <a href=\"#\">html</a> HTML&nbsp;tutorial...<br>END</p>
+</body></html>''')
+
+
+'''
+<html>
+
+
+<head>
+</head>
+
+
+<body>
+
+
+<!--  test html parser  -->
+
+
+<p>
+Some
+<a>
+html
+</a>
+ HTML tutorial...
+<br>
+END
+</p>
+
+
+</body>
+</html>
+'''
