@@ -3699,3 +3699,115 @@ END
 </body>
 </html>
 '''
+
+
+
+
+
+'''
+找一个网页，例如https://www.python.org/events/python-events/，
+用浏览器查看源码并复制，
+然后尝试解析一下HTML，
+输出Python官网发布的会议时间、名称和地点。
+'''
+
+html_txt = ''
+
+try:
+    page = urllib.request.urlopen('https://www.python.org/events/python-events/')
+    html_txt = page.read()      #读取网页内容
+finally:
+    page.close()
+    
+'''
+<li>
+<h3 class="event-title"><a href="/events/python-events/733/">PyCon Nigeria</a></h3>
+<p>
+<time datetime="2018-09-13T00:00:00+00:00">13 Sept. &ndash; 16 Sept. <span class="say-no-more"> 2018</span></time>
+<span class="event-location">Lagos, Nigeria</span>
+</p>
+</li>
+'''
+    
+class MyHTMLParser(HTMLParser):
+    
+    def __init__(self):
+        HTMLParser.__init__(self)
+        self._title = [False]
+        self._time = [False]
+        self._place = [False]
+        self.time = ''      #用于拼接时间
+    
+    # attrs存储形式：[('class', 'event-title')]
+    def _attr(self, attrlist, attrname):
+        for attr in attrlist:
+            if attr[0] == attrname:
+                return attr[1]
+        return None
+        
+    def handle_starttag(self, tag, attrs):
+        # print('<%s>' % tag)
+        if tag == 'h3' and self._attr(attrs, 'class') == 'event-title':
+            self._title[0] = True
+        if tag == 'time':
+            self._time[0] = True
+        if tag == 'span' and self._attr(attrs, 'class') == 'event-location':
+            self._place[0] = True
+
+    def handle_endtag(self, tag):
+        #print('</%s>' % tag)
+        if tag == 'time':
+            self._time.append(self.time)
+            self.time = ''
+            self._time[0] = False
+            
+    def handle_startendtag(self, tag, attrs):
+        #print('<%s/>' % tag)    
+        pass
+        
+    def handle_data(self, data):
+        #print(data)
+        if self._title[0] == True:
+            #print('title:%s' % data)
+            self._title.append(data)
+            self._title[0] = False
+        if self._time[0] == True:
+            #print('time:%s' % data)
+            self.time += data       #拼接time
+        if self._place[0] == True:
+            #print('place:%s' % data)
+            self._place.append(data)
+            self._place[0] = False
+            
+        
+    def handle_comment(self, data):
+        # print('<!--', data, '-->')
+        pass
+        
+    # 特殊字符 英文表示的&nbsp;
+    def handle_entityref(self, name):
+        #print('&%s;' % name)
+        if self._time[0] == True:
+            self.time += '-'    # &ndash -> '-'
+        
+    #特殊字符 数字表示的&#1234;
+    def handle_charref(self, name):
+        #print('&#%s;' % name)
+        pass
+        
+    def show_content(self):
+        for n in range(1, len(self._title)):
+            print('Title: %s' % self._title[n])
+            print('Time: %s' % self._time[n])
+            print('Place: %s' % self._place[n])
+            print('--------------------------')
+            
+            
+parser = MyHTMLParser()
+parser.feed(html_txt.decode('utf-8'))
+
+parser.show_content()
+
+print(parser._title)
+print(parser._time)
+print(parser._place)
