@@ -3811,3 +3811,11 @@ parser.show_content()
 print(parser._title)
 print(parser._time)
 print(parser._place)
+
+
+
+# 安装Pillow
+# 如果安装了Anaconda，Pillow就已经可用了。否则，需要在命令行下通过pip安装：
+# $ pip install pillow
+# 如果遇到Permission denied安装失败，请加上sudo重试。
+
