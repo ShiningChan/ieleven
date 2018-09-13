@@ -1,4 +1,5 @@
 # -*- coding:utf-8 -*-
+#!/usr/bin/env python       # mac下使用PIL报错解决
 
 from collections import Iterable
 from functools import reduce
@@ -20,7 +21,7 @@ from urllib import request,parse
 import urllib
 from xml.parsers.expat import ParserCreate
 # import ssl
-# 针对mac处理
+# 针对mac处理 解决xml导入报错问题
 # ssl._create_default_https_context = ssl._create_unverified_context
 from html.parser import HTMLParser
 from html.entities import name2codepoint
@@ -48,22 +49,22 @@ im = Image.open('test.jpg')
 im2 = im.filter(ImageFilter.BLUR)
 im2.save('blur.jpg', 'jpeg')
 
-'''
+
 
 ## 绘图方法。生成字母验证码图片。
 
 # 随机字母 返回数值表达式sting型
 def rndChar():
     return chr(random.randint(65, 90))
-    
+
 # 随机颜色1
 def rndColor():
     return (random.randint(64, 255), random.randint(64, 255), random.randint(64, 255))
-    
+
 # 随机颜色2
 def rndColor2():
     return (random.randint(32, 127), random.randint(32, 127), random.randint(32, 127))
-    
+
 
 # 240 * 60 初始化画布
 width = 60 * 4
@@ -77,14 +78,28 @@ draw = ImageDraw.Draw(image)
 for x in range(width):
     for y in range(height):
         draw.point((x, y), fill = rndColor())
-        
+
 # 创建Font对象
 font = ImageFont.truetype('C:\Windows\Fonts\Arial.ttf', 36)
 
 # 输出文字
 for t in range(4):
     draw.text((60 * t + 10, 10), rndChar(), font = font, fill = rndColor2())
-    
+
 # 模糊
 image = image.filter(ImageFilter.BLUR)
 image.save('code.jpg', 'jpeg')
+'''
+
+
+
+im = Image.open('test.jpg')
+# 三个属性
+print(im.format)    # JPEG。识别图像源格式--None
+print(im.size)      #(440, 617)。宽度高度，tuple
+print(im.mode)      # RGB。此外还有L，CMTK
+
+im.show()       # 输出原图
+
+
+
