@@ -3819,3 +3819,136 @@ print(parser._place)
 # $ pip install pillow
 # 如果遇到Permission denied安装失败，请加上sudo重试。
 
+
+## 图片大小缩放
+
+# 打开一个jpg图像文件
+im = Image.open('test.jpg')
+# 获取图像尺寸
+w, h = im.size
+print('Original image size: %sx%s' % (w, h))
+# 缩放到50%
+im.thumbnail((w//2, h//2))      #取整除法
+print('Resize image to: %sx%s' %(w//2, h//2))
+# 把缩放后的图像用jpeg格式保存
+im.save('thumbnail.jpg', 'jpeg')
+
+
+## 图片模糊效果
+
+im = Image.open('test.jpg')
+# 应用模糊滤镜
+im2 = im.filter(ImageFilter.BLUR)
+im2.save('blur.jpg', 'jpeg')
+
+
+
+## 绘图方法。生成字母验证码图片。
+
+# 随机字母 返回数值表达式sting型
+def rndChar():
+    return chr(random.randint(65, 90))
+
+# 随机颜色1
+def rndColor():
+    return (random.randint(64, 255), random.randint(64, 255), random.randint(64, 255))
+
+# 随机颜色2
+def rndColor2():
+    return (random.randint(32, 127), random.randint(32, 127), random.randint(32, 127))
+
+
+# 240 * 60 初始化画布
+width = 60 * 4
+height = 60
+image = Image.new('RGB', (width, height), (255, 255, 255))
+
+# 创建Draw对象 画布内
+draw = ImageDraw.Draw(image)
+
+# 填充每个像素 画布
+for x in range(width):
+    for y in range(height):
+        draw.point((x, y), fill = rndColor())
+
+# 创建Font对象
+font = ImageFont.truetype('C:\Windows\Fonts\Arial.ttf', 36)
+
+# 输出文字
+for t in range(4):
+    draw.text((60 * t + 10, 10), rndChar(), font = font, fill = rndColor2())
+
+# 模糊
+image = image.filter(ImageFilter.BLUR)
+image.save('code.jpg', 'jpeg')
+
+
+
+im = Image.open('test.jpg')
+# 三个属性
+print(im.format)    # JPEG。识别图像源格式--None
+print(im.size)      #(440, 617)。宽度，高度，tuple
+print(im.width)
+print(im.height)
+print(im.mode)      # RGB。此外还有L，CMTK
+
+im.show()       # 输出原图 均显示bmp格式
+
+# 图像格式转化    endswith(<str>)
+def img2png(imgFile):
+    if imgFile.endswith(('.bmp', '.gif', '.jpg')):
+        with Image.open(imgFile) as im:
+            im.save(imgFile[:-3] + 'png')
+
+img2png('test.jpg')
+
+im2 = Image.open('test.png')
+im2.show()
+
+# 图像缩放，参数表示新的宽度高度
+im = im.resize((100, 100))
+
+
+blank = Image.new('RGB', (512, 512), 'white')
+
+draw = ImageDraw.Draw(blank)
+
+draw.line([0,0,120,120], fill = 'red')    
+# (x1,y1,x2,y2) [x1,y1,x2,y2][(xx,y1),(x2,y2)]
+
+draw.point([55,60], fill = 'black')
+draw.point([65,60], fill = 'black')
+draw.point([70,60], fill = 'black')
+draw.point([75,60], fill = 'black')
+draw.point([80,60], fill = 'black')
+
+draw.line([120,120,250,120], fill = 'red')    
+draw.line([120,120,120,250], fill = 'red')    
+draw.line([250,120,250,250], fill = 'red')    
+draw.line([120,250,250,250], fill = 'red')    
+
+# 方形内，相切画弧形。顺时针变大，与坐标轴相反
+draw.arc([120,120,250,250], 180, 360, fill = 'yellow')
+# startAngle, endAngle
+
+# 改变方形
+draw.arc([120,120,250,400], 90, 270, fill = 'blue')
+
+# 画圆形
+draw.ellipse([120,120,250,250], outline = 'black', fill = 'red')
+
+# 画圆形
+draw.ellipse([120,120,250,400], outline = 'black', )
+
+# chord 弦  pieslice 扇形 
+# polygon 多边形，连接顶点很棒棒 rectangle 矩形
+
+# 图像内插入文字
+draw.text(position, string, options)
+# position 指定字符串左上角坐标
+# options为fill或font
+
+blank.save('blank.jpg', 'jpeg')
+
+blank.show()
+
