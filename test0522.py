@@ -3952,3 +3952,100 @@ blank.save('blank.jpg', 'jpeg')
 
 blank.show()
 
+
+r = requests.get('https://www.douban.com/')
+# <Response[200]>
+r.status_code
+# 200 
+r.text
+# '<!DOCTYPE HTML>\n<html>\n<head>\n<meta name="description" content="提供图书、电影、音乐唱片的推荐、评论和...'
+
+## 区别以下 urllib.requests 模块
+
+
+'''
+## request模块抓取URL：get请求到指定页面，返回http响应
+with request.urlopen('https://api.douban.com/v2/book/2129650') as f:
+    data = f.read()
+'''
+
+'''
+# 模拟浏览器发送get请求，使用Request对象添加HTTP头
+req = request.Request('http://www.douban.com/')
+req.add_header('User-Agent', 'Mozilla/6.0(iPhone;CPU iPhone OS 8_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/8.0 Mobile/10A5376e Safari/8536.25')
+'''
+
+
+# 对于带参数的URL，传入一个dict作为params参数
+# 'https://www.douban.com/search?q=python&cat=1001'
+r = requests.get('http://www.douban.com/search', params = {'q': 'python', 'cat': '1001'})
+r.url      # 真实url
+r.encoding      #自动检测编码
+# 'utf-8'
+r.content   # 无论响应是文本还是二进制，都可以用content属性获取bytes对象
+# b'<!DOCTYPE html>\n<html>\n<head>\n<meta http-equiv="Content-Type" content="text/html; charset=utf-8">\n...'
+
+
+
+# 对于特定类型的响应，例如json，可以直接获取
+r = requests.get('https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20weather.forecast%20where%20woeid%20%3D%202151330&format=json')
+r.json()
+# {'query': {'count': 1, 'created': '2017-11-17T07:14:12Z', ...
+
+
+
+# 传入HTTP Header：传入一个dict
+r = requests.get('https://www.douban.com/', headers={'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit'})
+r.text
+# '<!DOCTYPE html>\n<html>\n<head>\n<meta charset="UTF-8">\n <title>豆瓣(手机版)</title>...'
+
+## Post请求：传入data参数作为请求数据
+r = requests.post('https://accounts.douban.com/login', data={'form_email': 'abc@example.com', 'form_password': '123456'})
+
+
+# requests 传递Json数据，直接传入json参数
+
+params = {'key': 'value'}
+r = request.post(url, json = params)    # 内部自动序列化为Json
+
+# 上传文件,files参数.读取文件，需要使用‘rb’二进制方法读取
+upload_files = {'file': open('report.xls', 'rb')}
+r = requests.post(url, files = upload_files)
+
+
+r.headers
+# {Content-Type': 'text/html; charset=utf-8', 'Transfer-Encoding': 'chunked', 'Content-Encoding': 'gzip', ...}
+
+r.headers['Content-Type']
+# 'text/html; charset=utf-8'
+
+
+# 特殊处理的cookies，不必解析
+r.cookies['ts']
+# 'example_cookie_12345'
+
+# 请求中传入Cookies，只需传入一个dict
+cs = {'token': '12345', 'status': 'working'}
+r = requests.get(url, cookies=cs)
+
+# 以秒为单位指定超时
+r = requests.get(url, timeout = 2.5)
+
+
+chardet.detect(b'Hello, world!')
+# {'encoding': 'ascii', 'confidence': 1.0, 'language': ''}
+# confidence 表示监测的概率是1.0（即 100%）
+
+
+data = '离离原上草，一岁一枯荣'.encode('gbk')
+chardet.detect(data)
+# {'encoding': 'GB2312', 'confidence': 0.7407407407407407, 'language': 'Chinese'}
+
+data = '离离原上草，一岁一枯荣'.encode('utf-8')
+chardet.detect(data)
+# {'encoding': 'utf-8', 'confidence': 0.99, 'language': ''}
+
+data = '最新の主要ニュース'.encode('euc-jp')
+chardet.detect(data)
+# {'encoding': 'EUC-JP', 'confidence': 0.99, 'language': 'Japanese'}
+
