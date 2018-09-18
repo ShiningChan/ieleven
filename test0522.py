@@ -4049,3 +4049,188 @@ data = '最新の主要ニュース'.encode('euc-jp')
 chardet.detect(data)
 # {'encoding': 'EUC-JP', 'confidence': 0.99, 'language': 'Japanese'}
 
+
+
+
+
+## 获取CPU信息
+# CPU逻辑数量
+psutil.cpu_count()
+4
+# CPU物理核心
+psutil.cpu_count(logical = False)
+2       # 双核超线程， 4则是4核非超线程
+
+
+# 统计CPU的用户、系统、空闲时间
+psutil.cpu_times()
+scputimes(user=8915.4375, system=7503.78125, idle=195506.48437499997, interrupt=173.640625, dpc=148.6875)
+
+
+for x in range(10):
+    psutil.cpu_percent(interval = 1, percpu = True)
+
+'''
+[9.2, 4.7, 6.2, 3.1]
+[4.7, 3.1, 6.2, 9.4]
+[24.6, 29.7, 35.9, 25.0]
+[3.1, 0.0, 1.6, 12.5]
+[4.7, 6.2, 1.6, 7.8]
+[1.6, 0.0, 4.7, 7.8]
+[6.2, 3.1, 3.1, 7.8]
+[24.6, 31.2, 21.9, 21.9]
+[16.7, 4.7, 14.1, 12.5]
+[10.8, 1.6, 3.1, 3.1]
+'''
+
+
+## 获取内存信息
+# 获取物理内存
+psutil.virtual_memory()
+# svmem(total=8589934592, available=2866520064, percent=66.6, used=7201386496, free=216178688, active=3342192640, inactive=2650341376, wired=1208852480)
+# （字节）总内存 8GB，已使用6.7GB，使用率66.6%
+
+# 交换区内存信息
+psutil.swap_memory()
+#sswap(total=1073741824, used=150732800, free=923009024, percent=14.0, sin=10705981440, sout=40353792)
+
+
+## 获取磁盘信息
+psutil.disk_partitions() # 磁盘分区信息
+[sdiskpart(device='/dev/disk1', mountpoint='/', fstype='hfs', opts='rw,local,rootfs,dovolfs,journaled,multilabel')]
+# HFS 文件格式  rw 可读写 journaled 支持日志
+
+psutil.disk_usage('/') # 磁盘使用情况
+sdiskusage(total=998982549504, used=390880133120, free=607840272384, percent=39.1)
+
+psutil.disk_io_counters() # 磁盘IO
+sdiskio(read_count=988513, write_count=274457, read_bytes=14856830464, write_bytes=17509420032, read_time=2228966, write_time=1618405)
+
+
+## 获取网络接口和网络连接信息
+psutil.net_io_counters() # 获取网络读写字节／包的个数
+#snetio(bytes_sent=3885744870, bytes_recv=10357676702, packets_sent=10613069, packets_recv=10423357, errin=0, errout=0, dropin=0, dropout=0)
+
+psutil.net_if_addrs() # 获取网络接口信息
+{
+  'lo0': [snic(family=<AddressFamily.AF_INET: 2>, address='127.0.0.1', netmask='255.0.0.0'), ...],
+  'en1': [snic(family=<AddressFamily.AF_INET: 2>, address='10.0.1.80', netmask='255.255.255.0'), ...],
+  'en0': [...],
+  'en2': [...],
+  'bridge0': [...]
+}
+
+psutil.net_if_stats() # 获取网络接口状态
+{
+  'lo0': snicstats(isup=True, duplex=<NicDuplex.NIC_DUPLEX_UNKNOWN: 0>, speed=0, mtu=16384),
+  'en0': snicstats(isup=True, duplex=<NicDuplex.NIC_DUPLEX_UNKNOWN: 0>, speed=0, mtu=1500),
+  'en1': snicstats(...),
+  'en2': snicstats(...),
+  'bridge0': snicstats(...)
+}
+
+
+$ sudo python3      # 获取系统权限
+
+psutil.net_connections()    # 获取当前网络连接信息
+[
+    sconn(fd=83, family=<AddressFamily.AF_INET6: 30>, type=1, laddr=addr(ip='::127.0.0.1', port=62911), raddr=addr(ip='::127.0.0.1', port=3306), status='ESTABLISHED', pid=3725),
+    sconn(fd=84, family=<AddressFamily.AF_INET6: 30>, type=1, laddr=addr(ip='::127.0.0.1', port=62905), raddr=addr(ip='::127.0.0.1', port=3306), status='ESTABLISHED', pid=3725),
+    sconn(fd=93, family=<AddressFamily.AF_INET6: 30>, type=1, laddr=addr(ip='::', port=8080), raddr=(), status='LISTEN', pid=3725),
+    sconn(fd=103, family=<AddressFamily.AF_INET6: 30>, type=1, laddr=addr(ip='::127.0.0.1', port=62918), raddr=addr(ip='::127.0.0.1', port=3306), status='ESTABLISHED', pid=3725),
+    sconn(fd=105, family=<AddressFamily.AF_INET6: 30>, type=1, ..., pid=3725),
+    sconn(fd=106, family=<AddressFamily.AF_INET6: 30>, type=1, ..., pid=3725),
+    sconn(fd=107, family=<AddressFamily.AF_INET6: 30>, type=1, ..., pid=3725),
+    ...
+    sconn(fd=27, family=<AddressFamily.AF_INET: 2>, type=2, ..., pid=1)
+]
+
+
+list_pid = psutil.pids()    #获取所有进程id
+
+## 寻找python所在进程
+for i in list_pid:
+    m = psutil.Process(i)
+        if re.search('ython', m.name()) is not None:
+            print(i)
+
+# 9736
+
+ print(psutil.Process(9736).name())
+# python.exe
+p = psutil.Process(9736)
+
+p.name()    #进程名称
+# 'python.exe'
+
+p.exe()     #进程exe路程
+# 'C:\\Users\\洛七\\AppData\\Local\\Programs\\Python\\Python36\\python.exe'
+
+p.cwd() #进程工作目录
+# 'E:\\cookies\\ieleven'
+
+p.cmdline()     #进程启动的命令行
+# ['python']
+
+p.ppid()    #父进程id
+# 9696
+
+p.parent()      #父进程
+# psutil.Process(pid=9696, name='cmd.exe', started='10:47:24')
+
+p.children()    #子进程
+# []
+
+p.status()      #进程状态
+# 'running'
+
+p.username()    #进程用户名
+# 'DESKTOP-BC4KCNS\\Shining.Chan'
+
+p.create_time()     #进程创建时间
+# 1537238913.0
+
+datetime.fromtimestamp(p.create_time())
+# datetime.datetime(2018, 9, 18, 10, 48, 33)
+
+p.terminal()    #进程终端
+
+p.cpu_times()   #进程使用cpu时间
+# pcputimes(user=0.34375, system=4.796875, children_user=0.0, children_system=0.0)
+
+p.memory_info()     #进程使用的内存
+# pmem(rss=10350592, vms=8355840, num_page_faults=213182, peak_wset=14778368, wset=10350592, peak_paged_pool=179240, paged_pool=178840, peak_nonpaged_pool=14168, nonpaged_pool=13440, pagefile=8355840, peak_pagefile=8941568, private=8355840)
+
+p.open_files()      #进程打开的文章
+# [popenfile(path='C:\\Windows\\System32\\zh-CN\\KernelBase.dll.mui', fd=-1), popenfile(path='C:\\Windows\\System32\\zh-CN\\kernel32.dll.mui', fd=-1)]
+
+p.connections()     #进程相关网络连接
+# []
+
+p.num_threads()     #进程的线程数量
+# 5
+
+p.threads()     #所有线程信息
+# [pthread(id=13180, user_time=0.359375, system_time=4.890625), pthread(id=12988, user_time=0.0, system_time=0.0), pthread(id=3688, user_time=0.0, system_time=0.0), pthread(id=14664, user_time=0.0, system_time=0.0), pthread(id=14848, user_time=0.0, system_time=0.0)]
+
+p.environ()     #进程环境变量
+# {'ALLUSERSPROFILE': 'C:\\ProgramData', 'APPDATA': 'C:\\Users\\洛七\\AppData\\Roaming', 'COMMONPROGRAMFILES': 'C:\\Program Files\\Common Files', 'COMMONPROGRAMFILES(X86)': 'C:\\Program Files (x86)\\Common Files', 'COMMONPROGRAMW6432': 'C:\\Program Files\\Common Files', 'COMPUTERNAME': 'DESKTOP-BC4KCNS', 'COMSPEC': 'C:\\WINDOWS\\system32\\cmd.exe', 'DRIVERDATA': 'C:\\Windows\\System32\\Drivers\\DriverData', 'FPS_BROWSER_APP_PROFILE_STRING': 'Internet Explorer', 'FPS_BROWSER_USER_PROFILE_STRING': 'Default', 'HOMEDRIVE': 'C:', 'HOMEPATH': '\\Users\\洛七', 'LOCALAPPDATA': 'C:\\Users\\洛七\\AppData\\Local', 'LOGONSERVER': '\\\\DESKTOP-BC4KCNS', 'NUMBER_OF_PROCESSORS': '4', 'ONEDRIVE': 'C:\\Users\\洛七\\OneDrive', 'OS': 'Windows_NT', 'PATH': 'C:\\WINDOWS\\system32;C:\\WINDOWS;C:\\WINDOWS\\System32\\Wbem;C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\;C:\\WINDOWS\\System32\\OpenSSH\\;E:\\Program Files (x86)\\nodejs\\;E:\\Program Files (x86)\\Git\\cmd;E:\\Program Files (x86)\\Git\\bin;E:\\Program Files (x86)\\Git\\mingw32\\libexec\\git-core;C:\\Users\\洛七\\AppData\\Local\\Programs\\Python\\Python36\\Scripts\\;C:\\Users\\洛七\\AppData\\Local\\Programs\\Python\\Python36\\;C:\\Users\\洛七\\AppData\\Local\\Microsoft\\WindowsApps;C:\\Users\\洛七\\AppData\\Roaming\\npm', 'PATHEXT': '.COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC', 'PROCESSOR_ARCHITECTURE': 'AMD64', 'PROCESSOR_IDENTIFIER': 'Intel64 Family 6 Model 58 Stepping 9, GenuineIntel', 'PROCESSOR_LEVEL': '6', 'PROCESSOR_REVISION': '3a09', 'PROGRAMDATA': 'C:\\ProgramData', 'PROGRAMFILES': 'C:\\Program Files', 'PROGRAMFILES(X86)': 'C:\\Program Files (x86)', 'PROGRAMW6432': 'C:\\Program Files', 'PROMPT': '$P$G', 'PSMODULEPATH': 'C:\\Program Files\\WindowsPowerShell\\Modules;C:\\WINDOWS\\system32\\WindowsPowerShell\\v1.0\\Modules', 'PUBLIC': 'C:\\Users\\Public', 'SESSIONNAME': 'Console', 'SYSTEMDRIVE': 'C:', 'SYSTEMROOT': 'C:\\WINDOWS', 'TEMP': 'C:\\Users\\洛七\\AppData\\Local\\Temp', 'TMP': 'C:\\Users\\洛七\\AppData\\Local\\Temp', 'USERDOMAIN': 'DESKTOP-BC4KCNS', 'USERDOMAIN_ROAMINGPROFILE': 'DESKTOP-BC4KCNS', 'USERNAME': 'Shining.Chan', 'USERPROFILE': 'C:\\Users\\洛七', 'WINDIR': 'C:\\WINDOWS'}
+
+p.terminate()       #结束进程
+
+
+psutil.test()       # 类似unix中ps命令效果
+'''
+USER         PID %MEM     VSZ     RSS TTY           START    TIME  COMMAND
+root           0 24.0 74270628 2016380 ?             Nov18   40:51  kernel_task
+root           1  0.1 2494140    9484 ?             Nov18   01:39  launchd
+root          44  0.4 2519872   36404 ?             Nov18   02:02  UserEventAgent
+root          45    ? 2474032    1516 ?             Nov18   00:14  syslogd
+root          47  0.1 2504768    8912 ?             Nov18   00:03  kextd
+root          48  0.1 2505544    4720 ?             Nov18   00:19  fseventsd
+_appleeven    52  0.1 2499748    5024 ?             Nov18   00:00  appleeventsd
+root          53  0.1 2500592    6132 ?             Nov18   00:02  configd
+'''
+
+
+$ pip3 install virtualenv     #提供隔离的python运行环境，解决不同应用多版本冲突问题
