@@ -4234,3 +4234,7 @@ root          53  0.1 2500592    6132 ?             Nov18   00:02  configd
 
 
 $ pip3 install virtualenv     #提供隔离的python运行环境，解决不同应用多版本冲突问题
+
+
+
+
