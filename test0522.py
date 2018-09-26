@@ -4237,4 +4237,53 @@ $ pip3 install virtualenv     #提供隔离的python运行环境，解决不同�
 
 
 
+# 从Frame派生出一个Application类，作为所有Widget的父容器
+class Application(Frame):
+    
+    def __init__(self, master = None):
+        Frame.__init__(self, master)
+        self.pack()
+        self.createWidgets()
+        
+    def createWidgets(self):
+        self.helloLabel = Label(self, text = 'Hello, world!')
+        self.helloLabel.pack()  #把Widget加入到父容器中，并实现布局
+        # command触发命令
+        self.quitButton = Button(self, text = 'Quit', command = self.quit)
+        self.quitButton.pack()
+        
+
+# 实例化Application，启动消息循环
+app = Application()
+#设置窗口标题
+app.master.title('Hello World')
+#主消息循环
+app.mainloop()
+    
+
+    
+# 添加文本框输入
+class Application(Frame):
+    
+    def __init__(self, master = None):
+        Frame.__init__(self, master)
+        self.pack()
+        self.createWidgets()
+        
+    def createWidgets(self):
+        self.nameInput = Entry(self)
+        self.nameInput.pack()
+        self.alertButton = Button(self, text = 'Hello', command = self.hello)
+        self.alertButton.pack()
+        
+    def hello(self):
+        # 可缺省 
+        name = self.nameInput.get() or 'world'
+        messagebox.showinfo('Message', 'Hello, %s' % name)
+        
+        
+app = Application()
+app.master.title('Hello World')
+app.mainloop()
+
 

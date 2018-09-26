@@ -29,31 +29,9 @@ from PIL import Image, ImageFilter, ImageDraw, ImageFont
 import requests
 import chardet
 from tkinter import *
+import tkinter.messagebox as messagebox
 
 
-# 从Frame派生出一个Application类，作为所有Widget的父容器
-class Application(Frame):
-    
-    def __init__(self, master = None):
-        Frame.__init__(self, master)
-        self.pack()
-        self.createWidgets()
-        
-    def createWidgets(self):
-        self.helloLabel = Label(self, text = 'Hello, world!')
-        self.helloLabel.pack()  #把Widget加入到父容器中，并实现布局
-        # command触发命令
-        self.quitButton = Button(self, text = 'Quit', command = self.quit)
-        self.quitButton.pack()
-        
-
-# 实例化Application，启动消息循环
-app = Application()
-#设置窗口标题
-app.master.title('Hello World')
-#主消息循环
-app.mainloop()
-    
 
     
     
