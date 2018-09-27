@@ -34,51 +34,59 @@ from tkinter import *
 import tkinter.messagebox as messagebox
 import socket
 
-
-# 创建一个socket（<Address Family>, <Type>）
-# AF_INET指定使用IPv4协议，AF_INET6为IPv6（Internet进程间通信）
-# AF_UNIX（同一台机器进程间通信）
-# SOCK_STREAM指定使用面向流的TCP协议
-# SOCK_DGRAM面向数据报的UDP协议
+## 服务端 ##
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-# 建立连接   参数是一个tuple，(<地址>, <端口号>)
-# 域名自动转换到ip地址，Web服务的标准端口为80，SMTP服务标准端口是25
-# <1024的是Internet标准服务端口，>1024的可以任意使用
-s.connect(('www.sina.com.cn', 80))
+# 绑定监听的地址和端口
+# （服务器同时响应多个客户端请求，需要绑定一个端口并监听连接）
+
+# 服务器可能有多块网卡，可以绑定到某一块网卡的ip上
+# 0.0.0.0绑定到所有的网络地址
+# 127.0.0.1绑定到本机地址，客户端必须在本机运行才能连接
+# 端口号需预先指定。小于1024的端口号必须要管理员权限才能绑定
+
+# 绑定端口
+s.bind(('127.0.0.1', 9999))
+
+# 监听
+s.listen(5)     #指定等待连接的最大数量
+print('Waiting for connection...')
 
 
-# 发送数据
-# 发送的文本格式必须符合HTTP标准。HTTP协议规定，客户端先发请求给服务端
-s.send(b'GET / HTTP/1.1\r\nHost: www.sina.com.cn\r\nConnection: close\r\n\r\n')
-
-# 接收数据
-buffer = []
 while True:
-    # 每次最多接收1k字节 ---recv(max)方法
-    d = s.recv(1024)
-    if d:
-        buffer.append(d)    # 多个1024位字符串为元素的list
-    else:
-        break
+    # 接受一个新连接
+    sock, addr = s.accept()
+    # 创建新线程来处理TCP连接。传入函数、参数
+    t = threading.Thread(target = tcplink, args = (sock, addr))
+    t.start()
 
-data = b''.join(buffer)     # 组合成一个长长长字符串
+    
+# 每个连接都必须创建新线程（或进程）来处理
 
-# 关闭连接
+def tcplink(sock, addr)：
+    print('Accept new connection from %s:%s...' % addr)
+    sock.send(b'Welcome!')
+    while True:
+        data = sock.recv(1024)
+        time.sleep(1)
+        if not data or data.decode('utf-8') == 'exit':
+            break
+        sock.send(('Hello, %s!' % data.decode('utf-8')).encode('utf-8'))
+    sock.close()
+    print('Connection from %s:%s closed.' % addr)
+
+
+## 客户端 ##
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+# 建立连接
+s.connect(('127.0.0.1', 9999))
+# 接收欢迎消息
+print(s.recv(1024).decode('utf-8'))
+for data in [b'Michael', b'Tracy', b'Sarah']:
+    # 发送数据：
+    s.send(data)
+    print(s.recv(1024).decode('utf-8'))
+s.send(b'exit')
 s.close()
-
-
-## 接收到的数据包括HTTP头和网页本身
-## 需要将HTTP头和网页分离，把HTTP头打印出来，网页内容保存到文件
-
-print(data)
-
-header, html = data.split(b'\r\n\r\n', 1)
-
-print(header.decode('utf-8'))
-# 把接收的数据写进文件
-with open('sina.html', 'wb') as f:
-    f.write(html)
-
 
