@@ -4362,3 +4362,91 @@ X-Via-Edge: 153801094005633595edade9d7e7b57376a23
 
 '''
 
+## TCP/IP
+## 服务端 ##
+
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+# 绑定监听的地址和端口
+# （服务器同时响应多个客户端请求，需要绑定一个端口并监听连接）
+
+# 服务器可能有多块网卡，可以绑定到某一块网卡的ip上
+# 0.0.0.0绑定到所有的网络地址
+# 127.0.0.1绑定到本机地址，客户端必须在本机运行才能连接
+# 端口号需预先指定。小于1024的端口号必须要管理员权限才能绑定
+
+# 绑定端口
+s.bind(('127.0.0.1', 9999))
+
+# 监听
+s.listen(5)     #指定等待连接的最大数量
+print('Waiting for connection...')
+
+
+while True:
+    # 接受一个新连接
+    sock, addr = s.accept()
+    # 创建新线程来处理TCP连接。传入函数、参数
+    t = threading.Thread(target = tcplink, args = (sock, addr))
+    t.start()
+
+    
+# 每个连接都必须创建新线程（或进程）来处理
+
+def tcplink(sock, addr)：
+    print('Accept new connection from %s:%s...' % addr)
+    sock.send(b'Welcome!')
+    while True:
+        data = sock.recv(1024)
+        time.sleep(1)
+        if not data or data.decode('utf-8') == 'exit':
+            break
+        sock.send(('Hello, %s!' % data.decode('utf-8')).encode('utf-8'))
+    sock.close()
+    print('Connection from %s:%s closed.' % addr)
+
+
+## 客户端 ##
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+# 建立连接
+s.connect(('127.0.0.1', 9999))
+# 接收欢迎消息
+print(s.recv(1024).decode('utf-8'))
+for data in [b'Michael', b'Tracy', b'Sarah']:
+    # 发送数据：
+    s.send(data)
+    print(s.recv(1024).decode('utf-8'))
+s.send(b'exit')
+s.close()
+
+
+
+
+
+## UDP协议
+# TCP建立可靠连接，双方通信以流的形式发送数据
+# UDP不需要建立连接，知道服务端地址和端口即可。传输速度快，但不一定能可靠到达
+
+## 服务端
+s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+s.bind(('127.0.0.1', 9999))
+
+# 不需要调用listen()方法，直接接收来自任何客户端的数据
+print('Bind UDP on 9999...')
+while True:
+    #接收数据
+    data, addr = s.recvfrom(1024)       #返回数据和客户端的地址与端口 recv data from addr
+    print('Received from %s:%s.' % addr)
+    s.sendto(b'Hello, %s!' % data, addr)    #UDP将数据发送给客户端
+# 因为不是一对一的连接，所以需要发送地址
+    
+    
+## 客户端
+s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+for data in [b'Michael', b'Tracy', b'Sarah']:
+    # 发送数据
+    s.sendto(data, ('127.0.0.1', 9999))     # send data to addr 
+    # 接收数据
+    print(s.recv(1024).decode('utf-8'))
+
+s.close()
