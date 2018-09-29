@@ -39,6 +39,7 @@ from email import encoders
 from email.header import Header
 from email.utils import parseaddr, formataddr
 
+
 # 格式化邮件地址 name <addr@example.com>
 # Header编码处理中文
 def _format_addr(s):
@@ -65,6 +66,13 @@ smtp_server = 'smtp.126.com' # input('SMTP server: ')
 # <参数1> - 邮件正文， <参数2> - subtype(plain表示纯文本)，编码保证多语言兼容性
 msg = MIMEText('hello, send by Python...', 'plain', 'utf-8')
 
+
+# 发送HTML邮件，而非简单纯文本
+# 将HTML字符传进去，再把第二个参数改为html
+msg = MIMEText('<html><body><h1>Hello</h1>' + 
+    '<p>send by <a href = "http://www.python.org">Python</a>...</p>' + 
+    '</body></html>', 'html', 'utf-8')
+
 msg['from'] = _format_addr('Python爱好者 <%s>' % from_addr)
 # 接收字符串，而不是list。多个地址用,分隔
 msg['To'] = _format_addr('管理员 <%s>' % to_addr)
@@ -72,7 +80,16 @@ msg['Subject'] = Header('来自SMTP的问候......', 'utf-8').encode()
 
 print(msg)
 
+'''
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: base64
+from: =?utf-8?b?UHl0aG9u54ix5aW96ICF?= <chenweiqingme@126.com>
+To: =?utf-8?b?566h55CG5ZGY?= <438024599@qq.com>
+Subject: =?utf-8?b?5p2l6IeqU01UUOeahOmXruWAmS4uLi4uLg==?=
 
+aGVsbG8sIHNlbmQgYnkgUHl0aG9uLi4u
+'''
 
 #新建一个协议服务
 server = smtplib.SMTP(smtp_server, 25)      #SMTP协议默认端口是25
