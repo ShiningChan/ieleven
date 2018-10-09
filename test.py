@@ -62,24 +62,37 @@ smtp_server = 'smtp.126.com' # input('SMTP server: ')
 
 
 ## 1/MUA把邮件发送到MTA
-# 构造简单纯文本
-# <参数1> - 邮件正文， <参数2> - subtype(plain表示纯文本)，编码保证多语言兼容性
+# 带附件的邮件
+# 创建邮件对象
+msg = MIMEMultipart()
 msg = MIMEText('hello, send by Python...', 'plain', 'utf-8')
 
-
-# 发送HTML邮件，而非简单纯文本
-# 将HTML字符传进去，再把第二个参数改为html
-msg = MIMEText('<html><body><h1>Hello</h1>' + 
-    '<p>send by <a href = "http://www.python.org">Python</a>...</p>' + 
-    '</body></html>', 'html', 'utf-8')
 
 msg['from'] = _format_addr('Python爱好者 <%s>' % from_addr)
 # 接收字符串，而不是list。多个地址用,分隔
 msg['To'] = _format_addr('管理员 <%s>' % to_addr)
 msg['Subject'] = Header('来自SMTP的问候......', 'utf-8').encode()
 
-print(msg)
+# 邮件正文是MIMEText
+msg.attach(MIMEText('send with file...', 'plain', 'utf-8'))
 
+
+
+# 添加附件就是加上一个MIMEBase，从本地读取一个图片
+with open(Header('C:\Users\洛七\DeskTop\wedding.jpg', 'utf-8').encode(), 'rb') as f:
+    # 设置附件的MIME和文件名
+    mime = MIMEBase('image', 'jpg', filename = 'wedding.jpg')
+    # 加上必要的头信息
+    mime.add_header('Content-Disposition', 'attachment', filename = 'wedding.jpg')
+    mime.add_header('Content-ID', '<0>')
+    mime.add_header('X-Attachment-ID', '0')
+    # 把附件的内容读进来
+    mime.set_payload(f.read())
+    # 用base64编码
+    encoders.encode_base64(mine)
+    # 添加到MIMEMultipart
+    msg.attach(mime)
+    
 '''
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
