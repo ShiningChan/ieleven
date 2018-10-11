@@ -34,6 +34,8 @@ from tkinter import *
 import tkinter.messagebox as messagebox
 import socket
 from email.mime.text import MIMEText    # 负责构造邮件
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
 import smtplib      # 负责发送邮件
 from email import encoders
 from email.header import Header
@@ -64,9 +66,7 @@ smtp_server = 'smtp.126.com' # input('SMTP server: ')
 ## 1/MUA把邮件发送到MTA
 # 带附件的邮件
 # 创建邮件对象
-msg = MIMEMultipart()
-msg = MIMEText('hello, send by Python...', 'plain', 'utf-8')
-
+msg = MIMEMultipart('alternative')  #可以组合html和plain
 
 msg['from'] = _format_addr('Python爱好者 <%s>' % from_addr)
 # 接收字符串，而不是list。多个地址用,分隔
@@ -79,7 +79,7 @@ msg.attach(MIMEText('send with file...', 'plain', 'utf-8'))
 
 
 # 添加附件就是加上一个MIMEBase，从本地读取一个图片
-with open(Header('C:\Users\洛七\DeskTop\wedding.jpg', 'utf-8').encode(), 'rb') as f:
+with open(r'C:\Users\洛七\DeskTop\wedding.jpg', 'rb') as f:
     # 设置附件的MIME和文件名
     mime = MIMEBase('image', 'jpg', filename = 'wedding.jpg')
     # 加上必要的头信息
@@ -89,10 +89,20 @@ with open(Header('C:\Users\洛七\DeskTop\wedding.jpg', 'utf-8').encode(), 'rb')
     # 把附件的内容读进来
     mime.set_payload(f.read())
     # 用base64编码
-    encoders.encode_base64(mine)
+    encoders.encode_base64(mime)
     # 添加到MIMEMultipart
     msg.attach(mime)
     
+
+# print(msg)    
+
+
+# 先把图片作为附件添加进去，再在html中引用。多个图片可以依次引用
+msg.attach(MIMEText('<html><body><h1>Hello</h1><p><img src = "cid:0"></p></body></html>', 'html', 'utf-8'))
+
+
+
+
 '''
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
@@ -117,5 +127,4 @@ server.quit()
 
 
 # 2/MUA从MTA收取邮件
-
 
