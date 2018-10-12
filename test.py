@@ -37,94 +37,73 @@ from email.mime.text import MIMEText    # 负责构造邮件
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 import smtplib      # 负责发送邮件
+import poplib       #负责下载邮件
 from email import encoders
 from email.header import Header
 from email.utils import parseaddr, formataddr
-
-
-# 格式化邮件地址 name <addr@example.com>
-# Header编码处理中文
-def _format_addr(s):
-    name, addr = parseaddr(s)
-    return formataddr((Header(name, 'utf-8').encode(), addr))
-
-
-## 通过SMTP发出去
-# 输入Email地址和口令
-from_addr = 'chenweiqingme@126.com' # input('From: ')
-password = 'chenwq004' # input('Password: ')
-# 输入收件人地址
-to_addr = '438024599@qq.com' # input('To: ')
-# 输入SMTP服务器地址
-smtp_server = 'smtp.126.com' # input('SMTP server: ')
-
-
-## 电子邮件 SMTP协议
-# 发件人 -> MUA -> MTA -> MTA -> 若干个MTA -> MDA <- MUA <- 收件人
-
-
-## 1/MUA把邮件发送到MTA
-# 带附件的邮件
-# 创建邮件对象
-msg = MIMEMultipart('alternative')  #可以组合html和plain
-
-msg['from'] = _format_addr('Python爱好者 <%s>' % from_addr)
-# 接收字符串，而不是list。多个地址用,分隔
-msg['To'] = _format_addr('管理员 <%s>' % to_addr)
-msg['Subject'] = Header('来自SMTP的问候......', 'utf-8').encode()
-
-# 邮件正文是MIMEText
-msg.attach(MIMEText('send with file...', 'plain', 'utf-8'))
-
-
-
-# 添加附件就是加上一个MIMEBase，从本地读取一个图片
-with open(r'C:\Users\洛七\DeskTop\wedding.jpg', 'rb') as f:
-    # 设置附件的MIME和文件名
-    mime = MIMEBase('image', 'jpg', filename = 'wedding.jpg')
-    # 加上必要的头信息
-    mime.add_header('Content-Disposition', 'attachment', filename = 'wedding.jpg')
-    mime.add_header('Content-ID', '<0>')
-    mime.add_header('X-Attachment-ID', '0')
-    # 把附件的内容读进来
-    mime.set_payload(f.read())
-    # 用base64编码
-    encoders.encode_base64(mime)
-    # 添加到MIMEMultipart
-    msg.attach(mime)
-    
-
-# print(msg)    
-
-
-# 先把图片作为附件添加进去，再在html中引用。多个图片可以依次引用
-msg.attach(MIMEText('<html><body><h1>Hello</h1><p><img src = "cid:0"></p></body></html>', 'html', 'utf-8'))
-
-
-
-
-'''
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Content-Transfer-Encoding: base64
-from: =?utf-8?b?UHl0aG9u54ix5aW96ICF?= <chenweiqingme@126.com>
-To: =?utf-8?b?566h55CG5ZGY?= <438024599@qq.com>
-Subject: =?utf-8?b?5p2l6IeqU01UUOeahOmXruWAmS4uLi4uLg==?=
-
-aGVsbG8sIHNlbmQgYnkgUHl0aG9uLi4u
-'''
-
-#新建一个协议服务
-server = smtplib.SMTP(smtp_server, 25)      #SMTP协议默认端口是25
-# 打印出和SMTP服务器交互的所有信息
-server.set_debuglevel(1)
-# 登陆邮箱
-server.login(from_addr, password)
-# 发送邮件，[to_addr]一次可以发送多人，list展示；as_sting把对象变成str
-server.sendmail(from_addr, [to_addr], msg.as_string())
-server.quit()
-
+from email.parser import Parser
+from email.header import decode_header
 
 
 # 2/MUA从MTA收取邮件
+# 编写一个MUA作为客户端，从MDA把邮件获取到电脑或者手机上
+#step1 用poplib把邮件的原始文本下载到本地
+#step2 用email解析原始文本，还原为邮件对象
 
+# 输入邮件地址、口令和pop3服务器地址
+email = '438024599@qq.com'  #input('Email: ')
+password = 'ztxxqglnshdscbdh' #input('password: ')
+pop3_server = 'pop.qq.com' # input(POP3 server: )
+
+# 连接到pop3服务器
+server = poplib.POP3(pop3_server)
+# 可以打开或关闭调试信息
+server.set_debuglevel(1)
+# 可选：打印pop3服务器的欢迎文字
+print(server.getwelcome().decode('utf-8'))
+
+
+# 身份认证
+server.user(email)
+server.pass_(password)
+
+# stat()返回邮件数量和占用空间
+print('Message: %s. Size: %s' % server.stat())
+# list()返回所有邮件的编号
+resp, mails, octets = server.list()
+# 可以查看返回的列表类似[b'1 82923', b'2 2184']
+print(mails)
+
+# 获取最新一封邮件。注意索引号从1开始
+index = len(mails)
+resp, lines, octets = server.retr(index)    #循环使用可将每一封邮件内容都拿到
+
+# lines存储了邮件的原始文本的每一行
+# 可以获得整个邮件的原始文本
+msg_content = b'\r\n'.join(lines).decode('utf-8')
+#稍后解析出邮件：
+msg = Parser().parsestr(msg_content)
+
+
+# 可以根据邮件索引号直接从服务器删除邮件
+# server.dele(index)
+# 关闭连接
+server.quit()
+
+print('-------------------以下为邮件原始文本-----------')
+print(msg)
+print('-------------------以上为邮件原始文本-----------')
+## Message对象本身可能是一个MIMEMultipart对象，包含嵌套的其他MIMEBase对象
+# 可能多层嵌套。因此要递归打印出Message对象的层次结构
+
+'''
+#indent用于缩进显示
+def print_info(msg, indent = 0):
+    if indent == 0:
+        for header in ['From', 'To', 'Subject']:
+            value = msg.get(header, '')
+            if value:
+                if header == 'Subject'
+                    value = decode_str(value)
+                else:
+                    '''
